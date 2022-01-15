@@ -1,0 +1,44 @@
+databaseChangeLog:
+- changeSet:
+    id: 01.create-user-table
+    author: alexandru.stratulat
+    changes:
+    - createTable:
+        tableName: users
+        column:
+        - column:
+            name: id
+            type: BIGINT
+            constraints:
+                - primaryKey: true
+        - column:
+            name: username
+            type: VARCHAR(128)
+            constraints:
+                - nullable: false
+                - unique: true
+        - column:
+            name: password
+            type: VARCHAR(128)
+            constraints:
+                - nullable: false
+        - column:
+            name: deposit
+            type: INT
+            constraints:
+                - nullable: false
+        - column:
+            name: role
+            type: VARCHAR(32)
+            constraints:
+                - nullable: false
+        - column:
+            name: inserted_date
+            type: TIMESTAMP(3)
+            constraints:
+                - nullable: false
+        - column:
+            name: updated_date
+            type: TIMESTAMP(3)
+            constraints:
+                - nullable: false

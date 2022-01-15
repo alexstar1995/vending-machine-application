@@ -1,16 +1,16 @@
 version: '3.2'
 services:
-  vending_machine_application:
-    image: mvpfactory/vending-machine:latest
-    build:
-        context: .
-    container_name: vending-machine-application
-    expose:
-        - 8080
-    ports:
-        - "8080:8080"
-    depends_on:
-        - vending_machine_db
+#   vending_machine_application:
+#     image: mvpfactory/vending-machine:latest
+#     build:
+#         context: .
+#     container_name: vending-machine-application
+#     expose:
+#         - 8080
+#     ports:
+#         - "8080:8080"
+#     depends_on:
+#         - vending_machine_db
   vending_machine_db:
     image: postgres:14.1
     container_name: postgres_db

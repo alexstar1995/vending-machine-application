@@ -1,4 +1,4 @@
-!#/bin.bash
+!#/bin/bash
 
 echo "Starting application"
 gradle clean test integrationTest build
