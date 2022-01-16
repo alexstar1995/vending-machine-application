@@ -3,9 +3,11 @@ package com.mvpfactory.vendingmachine.repository.entity;
 import com.mvpfactory.vendingmachine.model.Role;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -18,8 +20,12 @@ import java.sql.Timestamp;
 public class UserEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    private UUID id;
 
     @Column(unique = true)
     private String username;

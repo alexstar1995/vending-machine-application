@@ -8,18 +8,19 @@ import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
+public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     Optional<UserEntity> findUserEntityByUsername(String username);
 
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE users SET u.deposit = 0 WHERE u.id = :id", nativeQuery = true)
-    void resetDeposit(@Param("id") Long id);
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE users SET deposit = 0 WHERE id = :id", nativeQuery = true)
+    void resetDeposit(@Param("id") UUID id);
 
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE users SET u.deposit = u.deposit + :coin WHERE u.id = :id", nativeQuery = true)
-    void deposit(@Param("id") Long id, @Param("coin") Integer coin);
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE users SET deposit = deposit + :coin WHERE id = :id", nativeQuery = true)
+    void deposit(@Param("id") UUID id, @Param("coin") Integer coin);
 }

@@ -43,22 +43,21 @@ public class UserController {
         return userService.updateUser(user);
     }
 
-    @DeleteMapping("/{username}")
+    @DeleteMapping
     @ResponseStatus(HttpStatus.OK)
-    public void deleteUser(@PathVariable String username) {
-        userService.deleteUser(username);
+    public void deleteUser() {
+        userService.deleteUser();
     }
 
-    @PutMapping("/{username}/deposit/reset")
+    @PutMapping("deposit/reset")
     @ResponseStatus(HttpStatus.OK)
-    public void resetUserDeposit(@PathVariable String username) {
-        userService.resetDeposit(username);
+    public void resetUserDeposit() {
+        userService.resetDeposit();
     }
 
-    @PutMapping("/{username}/deposit")
+    @PutMapping("/deposit")
     @ResponseStatus(HttpStatus.OK)
-    public User deposit(@PathVariable String username,
-                        @RequestBody @Valid DepositRequest depositRequest) {
-        return userService.deposit(username, depositRequest);
+    public User deposit(@RequestBody @Valid DepositRequest depositRequest) {
+        return userService.deposit(depositRequest);
     }
 }

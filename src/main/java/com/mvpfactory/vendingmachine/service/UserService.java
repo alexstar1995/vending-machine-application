@@ -1,19 +1,20 @@
 package com.mvpfactory.vendingmachine.service;
 
-import com.mvpfactory.vendingmachine.error.model.DepositException;
-import com.mvpfactory.vendingmachine.error.model.OperationNotAllowedException;
-import com.mvpfactory.vendingmachine.error.model.UserDetailsException;
-import com.mvpfactory.vendingmachine.error.model.UserNotFoundException;
+import com.mvpfactory.vendingmachine.error.model.*;
 import com.mvpfactory.vendingmachine.model.DepositRequest;
-import com.mvpfactory.vendingmachine.model.Role;
+
 import com.mvpfactory.vendingmachine.repository.entity.UserEntity;
 import com.mvpfactory.vendingmachine.repository.mapper.UserMapper;
 import com.mvpfactory.vendingmachine.model.User;
 import com.mvpfactory.vendingmachine.repository.UserRepository;
+import com.mvpfactory.vendingmachine.security.AuthUserService;
+import com.mvpfactory.vendingmachine.security.model.AuthUserDetails;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -27,45 +28,63 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AuthUserService authUserService;
     private final UserMapper userMapper;
-    private List<Integer> allowedCoins;
+    private final List<Integer> allowedCoins;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper,
+    public UserService(UserRepository userRepository, AuthUserService authUserService, UserMapper userMapper,
                        @Value("#{'${allowed_coins}'.split(',')}") List<Integer> allowedCoins) {
         this.userRepository = userRepository;
+        this.authUserService = authUserService;
         this.userMapper = userMapper;
         this.allowedCoins = allowedCoins;
     }
 
     public User findUser(String username) {
-        log.info("Trying to find user {}", username);
-        UserEntity userEntity = getUserIfExists(username);
-        return userMapper.map(userEntity);
+        Optional<UserEntity> userEntity = userRepository.findUserEntityByUsername(username);
+        if(userEntity.isEmpty()) {
+            throw new UserNotFoundException(String.format("Username %s not found", username));
+        }
+        return userMapper.map(userEntity.get());
     }
 
     public User updateUser(User user) {
-        log.info("Trying to update user {}", user.getUsername());
-        getUserIfExists(user.getUsername());
-        if(user.getDeposit() < 0) {
-            throw new UserDetailsException(String.format("Username %s cannot have negative deposit", user.getUsername()));
+
+        AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
+        log.info("Trying to update user {}", loggedInUser.getUsername());
+
+        UserEntity existingUser = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
+        if(user.getDeposit() == null && !existingUser.getDeposit().equals(user.getDeposit())) {
+            throw new UserDetailsException(String.format("Cannot update deposit for user %s. Please use endpoint /deposit", loggedInUser.getUsername()));
         }
-        return userMapper.map(
-                userRepository.save(
-                        userMapper.mapForUpdate(user, Timestamp.from(Instant.now()))
-                )
-        );
+
+        UserEntity updatedUserEntity = userMapper.mapForUpdate(user, Timestamp.from(Instant.now()));
+        updatedUserEntity.setInsertedDate(existingUser.getInsertedDate());
+        updatedUserEntity.setId(userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get().getId());
+        if(!loggedInUser.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + user.getRole()))) {
+            updatedUserEntity.setDeposit(0);
+        }
+
+        UserEntity savedEntity = userRepository.save(updatedUserEntity);
+        authUserService.logOutUser();
+        return userMapper.map(savedEntity);
     }
 
     public User registerUser(User user) {
+        if(userRepository.findUserEntityByUsername(user.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException(String.format("Username %s already exists", user.getUsername()));
+        }
+        user.setDeposit(0);
         UserEntity insertedUser = userRepository.save(userMapper.mapForInsertion(user, Timestamp.from(Instant.now())));
-        userRepository.resetDeposit(insertedUser.getId());
         return userMapper.map(userRepository.getById(insertedUser.getId()));
     }
-    public void deleteUser(String username) {
-        log.info("Trying to delete user {}", username);
-        UserEntity userEntity = getUserIfExists(username);
-        userRepository.delete(userEntity);
+
+    public void deleteUser() {
+        AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
+        log.info("Trying to delete user {}", loggedInUser.getUsername());
+        userRepository.delete(userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get());
+        authUserService.logOutUser();
     }
 
     public List<User> getAllUsers() {
@@ -73,38 +92,22 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::map).collect(Collectors.toList());
     }
 
-    public User deposit(String username, DepositRequest depositRequest) {
-        log.info("Trying to deposit amount {} for user {}", depositRequest.getCoin(), username);
-        UserEntity userEntity = getUserIfExists(username);
-        checkIfUserHasTheCorrectRole(userEntity);
+    public User deposit(DepositRequest depositRequest) {
+        AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
+        log.info("Trying to deposit amount {} for user {}", depositRequest.getCoin(), loggedInUser.getUsername());
+        UserEntity userEntity = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
 
         if(!allowedCoins.contains(depositRequest.getCoin())) {
-            throw new DepositException(String.format("Coin %s is not in the allowed list for username %s", depositRequest.getCoin(), username));
+            throw new DepositException(String.format("Coin %s is not in the allowed list of %s", depositRequest.getCoin(), allowedCoins));
         }
         userRepository.deposit(userEntity.getId(), depositRequest.getCoin());
-        return userMapper.map(userRepository.getById(userEntity.getId()));
+        return userMapper.map(userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get());
     }
 
-    public void resetDeposit(String username) {
-        log.info("Trying to reset deposit for user {}", username);
-        UserEntity userEntity = getUserIfExists(username);
-        checkIfUserHasTheCorrectRole(userEntity);
+    public void resetDeposit() {
+        AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
+        log.info("Trying to reset deposit for user {}", loggedInUser.getUsername());
+        UserEntity userEntity = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
         userRepository.resetDeposit(userEntity.getId());
-    }
-
-    private UserEntity getUserIfExists(String username) {
-        log.info("Checking if username exists {}", username);
-        Optional<UserEntity> userEntity = userRepository.findUserEntityByUsername(username);
-        if(userEntity.isEmpty()) {
-            throw new UserNotFoundException(String.format("Username %s not found", username));
-        }
-        return userEntity.get();
-    }
-
-    private void checkIfUserHasTheCorrectRole(UserEntity userEntity) {
-        log.info("Checking if username {} has the correct role", userEntity.getUsername());
-        if(userEntity.getRole() != Role.BUYER) {
-            throw new OperationNotAllowedException(String.format("Username %s does not have the appropriate role", userEntity.getUsername()));
-        }
     }
 }

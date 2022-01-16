@@ -1,9 +1,7 @@
 package com.mvpfactory.vendingmachine.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 
@@ -17,10 +15,10 @@ public class User {
     private String username;
 
     @NotBlank(message = "Mandatory password")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private Integer deposit;
 
-    @NotBlank(message = "Mandatory role")
     private Role role;
 }
