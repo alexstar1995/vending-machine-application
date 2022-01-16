@@ -55,7 +55,7 @@ public class UserService {
         log.info("Trying to update user {}", loggedInUser.getUsername());
 
         UserEntity existingUser = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
-        if(user.getDeposit() == null && !existingUser.getDeposit().equals(user.getDeposit())) {
+        if(user.getDeposit() == null || !user.getDeposit().equals(existingUser.getDeposit())) {
             throw new UserDetailsException(String.format("Cannot update deposit for user %s. Please use endpoint /deposit", loggedInUser.getUsername()));
         }
 
@@ -89,7 +89,10 @@ public class UserService {
 
     public List<User> getAllUsers() {
         log.info("Getting all users");
-        return userRepository.findAll().stream().map(userMapper::map).collect(Collectors.toList());
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::map)
+                .collect(Collectors.toList());
     }
 
     public User deposit(DepositRequest depositRequest) {
