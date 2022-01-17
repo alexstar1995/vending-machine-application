@@ -51,8 +51,8 @@ public class UserController {
 
     @PutMapping("deposit/reset")
     @ResponseStatus(HttpStatus.OK)
-    public void resetUserDeposit() {
-        userService.resetDeposit();
+    public User resetUserDeposit() {
+        return userService.resetDeposit();
     }
 
     @PutMapping("/deposit")

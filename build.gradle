@@ -52,6 +52,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-core:2.13.1'
 	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.1'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+	implementation 'org.projectlombok:lombok:1.18.20'
 
 	compileOnly 'org.projectlombok:lombok'
 
@@ -75,6 +76,7 @@ dependencies {
 	integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
 	integrationTestImplementation 'com.h2database:h2'
 	integrationTestImplementation 'org.liquibase:liquibase-core:4.7.0'
+	integrationTestImplementation 'org.projectlombok:lombok'
 }
 
 test {

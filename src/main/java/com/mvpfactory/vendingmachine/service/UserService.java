@@ -107,10 +107,11 @@ public class UserService {
         return userMapper.map(userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get());
     }
 
-    public void resetDeposit() {
+    public User resetDeposit() {
         AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
         log.info("Trying to reset deposit for user {}", loggedInUser.getUsername());
         UserEntity userEntity = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
         userRepository.resetDeposit(userEntity.getId());
+        return userMapper.map(userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get());
     }
 }

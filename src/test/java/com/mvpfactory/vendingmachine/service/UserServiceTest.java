@@ -331,16 +331,20 @@ public class UserServiceTest {
         when(userRepository.findUserEntityByUsername(EXISTING_USERNAME)).thenReturn(Optional.of(userEntity));
         when(userEntity.getId()).thenReturn(USER_ID);
         doNothing().when(userRepository).resetDeposit(USER_ID);
+        when(userMapper.map(userEntity)).thenReturn(EXISTING_USER);
 
-        userService.resetDeposit();
+        User result = userService.resetDeposit();
+
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(EXISTING_USER);
 
         verify(authUserService).getLoggedInUser();
         verifyNoMoreInteractions(authUserService);
 
-        verify(loggedInUser, times(2)).getUsername();
+        verify(loggedInUser, times(3)).getUsername();
         verifyNoMoreInteractions(loggedInUser);
 
-        verify(userRepository).findUserEntityByUsername(EXISTING_USERNAME);
+        verify(userRepository, times(2)).findUserEntityByUsername(EXISTING_USERNAME);
         verify(userRepository).resetDeposit(USER_ID);
         verifyNoMoreInteractions(userRepository);
     }
