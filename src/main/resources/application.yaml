@@ -1,1 +1,20 @@
+spring:
+    application:
+        name: vendingmachine
+    datasource:
+        url: jdbc:postgresql://localhost:5432/vending_machine
+        driver-class-name: org.postgresql.Driver
+        username: postgres
+        password: postgres
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                jdbc:
+                    time_zone: UTC
+    liquibase:
+        change-log: classpath:liquibase/db-changelog-root.yaml
 
+allowed_coins: 5,10,20,50,100
