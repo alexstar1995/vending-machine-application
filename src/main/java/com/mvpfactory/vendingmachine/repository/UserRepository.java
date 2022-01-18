@@ -23,4 +23,9 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE users SET deposit = deposit + :coin WHERE id = :id", nativeQuery = true)
     void deposit(@Param("id") UUID id, @Param("coin") Integer coin);
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE users SET deposit = deposit - :amount WHERE id = :id", nativeQuery = true)
+    void decrementDepositBy(@Param("id") UUID id, @Param("amount") Integer amount);
 }

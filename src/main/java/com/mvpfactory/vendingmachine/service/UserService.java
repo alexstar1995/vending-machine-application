@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +40,14 @@ public class UserService {
         this.authUserService = authUserService;
         this.userMapper = userMapper;
         this.allowedCoins = allowedCoins;
+    }
+
+    public User findUser(UUID id) {
+        Optional<UserEntity> userEntity = userRepository.findById(id);
+        if(userEntity.isEmpty()) {
+            throw new UserNotFoundException(String.format("User id %s not found", id));
+        }
+        return userMapper.map(userEntity.get());
     }
 
     public User findUser(String username) {

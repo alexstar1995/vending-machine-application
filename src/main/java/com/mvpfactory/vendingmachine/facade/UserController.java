@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -21,8 +22,14 @@ public class UserController {
 
     @GetMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public User getUser(@PathVariable String username) {
+    public User getUserByUsername(@PathVariable String username) {
         return userService.findUser(username);
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public User getUserById(@PathVariable UUID id) {
+        return userService.findUser(id);
     }
 
     @GetMapping
