@@ -150,7 +150,7 @@ public class UserControllerIntegrationTest {
     @SneakyThrows
     public void getUserWithCorrectCredentials_returnHttp200() {
         signUp(USER_SELLER_JSON);
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users/" + USER_SELLER_NAME)
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users/name/" + USER_SELLER_NAME)
                                   .header(HttpHeaders.AUTHORIZATION, "Basic " +
                                         Base64Utils
                                             .encodeToString((USER_SELLER_NAME + ":" + USER_SELLER_PASSWORD)

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Data
@@ -16,15 +17,15 @@ public class Product {
 
     private UUID id;
 
-    @NotBlank(message = "Mandatory username")
+    @NotNull(message = "Mandatory amount")
     private Integer amountAvailable;
 
-    @NotBlank(message = "Mandatory username")
+    @NotNull(message = "Mandatory cost")
     private Integer cost;
 
-    @NotBlank(message = "Mandatory username")
+    @NotBlank(message = "Mandatory product name")
     private String productName;
 
-    @NotBlank(message = "Mandatory username")
+    @NotNull(message = "Mandatory seller id")
     private UUID sellerId;
 }

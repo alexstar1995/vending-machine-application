@@ -1,0 +1,47 @@
+databaseChangeLog:
+- changeSet:
+    id: 02.create-product-table
+    author: alexandru.stratulat
+    changes:
+    - createTable:
+        tableName: products
+        column:
+        - column:
+            name: id
+            type: uuid
+            constraints:
+                - primaryKey: true
+        - column:
+            name: product_name
+            type: VARCHAR(128)
+            constraints:
+                - nullable: false
+                - unique: true
+        - column:
+            name: amount_available
+            type: INT
+            constraints:
+                - nullable: false
+        - column:
+            name: cost
+            type: INT
+            constraints:
+                - nullable: false
+        - column:
+            name: seller_id
+            type: UUID
+            constraints:
+              - nullable: false
+              - referencedTableName: users
+              - referencedColumnNames: id
+              - foreignKeyName: FK_Product_User
+        - column:
+            name: inserted_date
+            type: TIMESTAMP(3)
+            constraints:
+                - nullable: false
+        - column:
+            name: updated_date
+            type: TIMESTAMP(3)
+            constraints:
+                - nullable: false

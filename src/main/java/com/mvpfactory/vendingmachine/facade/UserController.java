@@ -20,13 +20,19 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/{username}")
+    @GetMapping("/idByName/{username}")
+    @ResponseStatus(HttpStatus.OK)
+    public UUID getUserId(@PathVariable String username) {
+        return userService.findUserId(username);
+    }
+
+    @GetMapping("/name/{username}")
     @ResponseStatus(HttpStatus.OK)
     public User getUserByUsername(@PathVariable String username) {
         return userService.findUser(username);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     @ResponseStatus(HttpStatus.OK)
     public User getUserById(@PathVariable UUID id) {
         return userService.findUser(id);

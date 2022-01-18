@@ -42,6 +42,14 @@ public class UserService {
         this.allowedCoins = allowedCoins;
     }
 
+    public UUID findUserId(String username) {
+        Optional<UserEntity> userEntity = userRepository.findUserEntityByUsername(username);
+        if(userEntity.isEmpty()) {
+            throw new UserNotFoundException(String.format("Username %s not found", username));
+        }
+        return userEntity.get().getId();
+    }
+
     public User findUser(UUID id) {
         Optional<UserEntity> userEntity = userRepository.findById(id);
         if(userEntity.isEmpty()) {

@@ -73,26 +73,31 @@ public class ProductService {
         if(productRepository.findProductEntitiesByProductName(product.getProductName()).isPresent()) {
             throw new ProductAlreadyExistsException(String.format("Product %s already exists", product.getProductName()));
         }
-        if(product.getCost() % 5 != 0) {
-            throw new InvalidProductCostException("Product cost should be a multiple of 5");
-        }
+        checkIfProductCostIsValid(product.getCost());
+
         UserEntity userEntity = getUserIfExists(product.getSellerId());
+
         ProductEntity insertedProduct = productRepository.save(productMapper.mapForInsertion(product, userEntity, Timestamp.from(Instant.now())));
         return productMapper.map(productRepository.getById(insertedProduct.getId()));
     }
 
     public Product updateProduct(Product product) {
-        checkIfProductExistsAndIfItBelongsToTheLoggedInUser(product.getId());
-        if(product.getCost() % 5 != 0) {
-            throw new InvalidProductCostException("Product cost should be a multiple of 5");
-        }
+        ProductEntity existingProductEntity = getProductIfExistsAndIfItBelongsToTheLoggedInUser(product.getId());
+        checkIfProductCostIsValid(product.getCost());
+
         UserEntity userEntity = getUserIfExists(product.getSellerId());
-        ProductEntity insertedProduct = productRepository.save(productMapper.mapForUpdate(product, userEntity, Timestamp.from(Instant.now())));
+        if(!userEntity.getId().equals(product.getSellerId())) {
+            throw new OperationNotAllowedException(String.format("Cannot change the seller/owner of product id %s", product.getId()));
+        }
+        ProductEntity updatedProductEntity = productMapper.mapForUpdate(product, userEntity, Timestamp.from(Instant.now()));
+        updatedProductEntity.setId(existingProductEntity.getId());
+        updatedProductEntity.setInsertedDate(existingProductEntity.getInsertedDate());
+        ProductEntity insertedProduct = productRepository.save(updatedProductEntity);
         return productMapper.map(productRepository.getById(insertedProduct.getId()));
     }
 
     public void deleteProduct(UUID id) {
-        checkIfProductExistsAndIfItBelongsToTheLoggedInUser(id);
+        getProductIfExistsAndIfItBelongsToTheLoggedInUser(id);
         productRepository.deleteById(id);
     }
 
@@ -107,26 +112,28 @@ public class ProductService {
         Integer orderCost = amountToBuy * productEntity.getCost();
         BuyResponse buyResponse = new BuyResponse();
 
-        buyResponse.setProductId(buyRequest.getProductId());
-        if(userEntity.getDeposit() >= orderCost) {
-            buyResponse.setTotalSpent(orderCost);
-            buyResponse.setChange(calculateChange(userEntity.getDeposit() - orderCost));
-            userRepository.decrementDepositBy(userEntity.getId(), orderCost);
-            productRepository.decrementAmountBy(productEntity.getId(), amountToBuy);
-        } else {
+        if(userEntity.getDeposit() < orderCost) {
             amountToBuy = userEntity.getDeposit() / productEntity.getCost();
             orderCost = amountToBuy * productEntity.getCost();
-            buyResponse.setTotalSpent(orderCost);
-            buyResponse.setChange(calculateChange(userEntity.getDeposit() - orderCost));
+
         }
-        return buyResponse;
+
+        userRepository.decrementDepositBy(userEntity.getId(), orderCost);
+        productRepository.decrementAmountBy(productEntity.getId(), amountToBuy);
+
+        return BuyResponse.builder()
+                .productId(buyRequest.getProductId())
+                .totalSpent(orderCost)
+                .numberOfProducts(amountToBuy)
+                .change(calculateChange(userEntity.getDeposit() - orderCost))
+                .build();
     }
 
     private List<Integer> calculateChange(Integer amount) {
         List<Integer> change = new ArrayList<>();
         allowedCoins.sort(Collections.reverseOrder());
         for (Integer coin : allowedCoins) {
-            if (amount > coin) {
+            if (amount >= coin) {
                 int numberOfCoins = amount / coin;
                 for(int index = 0; index < numberOfCoins; index++) {
                     change.add(coin);
@@ -145,13 +152,14 @@ public class ProductService {
         return productEntity.get();
     }
 
-    private void checkIfProductExistsAndIfItBelongsToTheLoggedInUser(UUID productId) {
+    private ProductEntity getProductIfExistsAndIfItBelongsToTheLoggedInUser(UUID productId) {
         ProductEntity productEntity = checkIfProductExists(productId);
         AuthUserDetails loggedInUser = authUserService.getLoggedInUser();
         UserEntity userEntity = userRepository.findUserEntityByUsername(loggedInUser.getUsername()).get();
-        if(userEntity.getId() != productEntity.getId()) {
-            throw new OperationNotAllowedException("Cannot delete a product not created by you");
+        if(userEntity.getId() != productEntity.getSeller().getId()) {
+            throw new OperationNotAllowedException("Cannot alter a product not created by you");
         }
+        return productEntity;
     }
 
     private UserEntity getUserIfExists(UUID userId) {
@@ -160,5 +168,11 @@ public class ProductService {
             throw new UserNotFoundException(String.format("User id %s not found", userId));
         }
         return userEntity.get();
+    }
+
+    private void checkIfProductCostIsValid(Integer cost) {
+        if(cost % 5 != 0) {
+            throw new InvalidProductCostException("Product cost should be a multiple of 5");
+        }
     }
 }

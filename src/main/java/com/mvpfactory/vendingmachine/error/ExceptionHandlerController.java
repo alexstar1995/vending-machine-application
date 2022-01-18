@@ -26,6 +26,13 @@ public class ExceptionHandlerController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(errorId, ex.getMessage()));
     }
 
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiError> handleException(ProductNotFoundException ex) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Product Not found. Error id is {} ", errorId, ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(errorId, ex.getMessage()));
+    }
+
     @ExceptionHandler({UnrecognizedPropertyException.class, })
     public ResponseEntity<ApiError> handleException(UnrecognizedPropertyException ex) {
         UUID errorId = UUID.randomUUID();
@@ -36,7 +43,7 @@ public class ExceptionHandlerController {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleException(DataIntegrityViolationException ex) {
         UUID errorId = UUID.randomUUID();
-        log.error("Error while inserting/updating user {} ", errorId, ex);
+        log.error("Error while inserting/updating entity {} ", errorId, ex);
         return ResponseEntity.badRequest().body(new ApiError(errorId, ex.getMessage()));
     }
 
@@ -69,6 +76,13 @@ public class ExceptionHandlerController {
         return ResponseEntity.badRequest().body(new ApiError(errorId, ex.getMessage()));
     }
 
+    @ExceptionHandler({ProductAlreadyExistsException.class})
+    public ResponseEntity<ApiError> handleException(ProductAlreadyExistsException ex) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Cannot create product because it already exists {}", errorId, ex);
+        return ResponseEntity.badRequest().body(new ApiError(errorId, ex.getMessage()));
+    }
+
     @ExceptionHandler({UsernameNotFoundException.class})
     public ResponseEntity<ApiError> handleException(UsernameNotFoundException ex) {
         UUID errorId = UUID.randomUUID();
@@ -81,5 +95,19 @@ public class ExceptionHandlerController {
         UUID errorId = UUID.randomUUID();
         log.error("Internal server error {}", errorId, ex);
         return ResponseEntity.internalServerError().body(new ApiError(errorId, ex.getMessage()));
+    }
+
+    @ExceptionHandler({InvalidProductCostException.class})
+    public ResponseEntity<ApiError> handleGenericException(InvalidProductCostException ex) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Invalid product cost {}", errorId, ex);
+        return ResponseEntity.badRequest().body(new ApiError(errorId, ex.getMessage()));
+    }
+
+    @ExceptionHandler({OperationNotAllowedException.class})
+    public ResponseEntity<ApiError> handleGenericException(OperationNotAllowedException ex) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Forbidden action on product {}", errorId, ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiError(errorId, ex.getMessage()));
     }
 }

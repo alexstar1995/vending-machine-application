@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,8 +34,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .disable()
                 .authorizeRequests()
                 .antMatchers("/api/v1/users/signup", "/login*").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/v1/products*").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .antMatchers("/api/v1/users*").hasAnyRole(Role.BUYER.toString(), Role.SELLER.toString())
-                .antMatchers("/api/v1/users/**/deposit", "/api/v1/users/**/reset").hasRole(Role.BUYER.name())
+                .antMatchers("/api/v1/users/**/deposit", "/api/v1/users/**/reset", "/api/v1/products/**/buy").hasRole(Role.BUYER.name())
+                .antMatchers(HttpMethod.POST, "/api/v1/products").hasRole(Role.SELLER.toString())
+                .antMatchers(HttpMethod.PUT, "/api/v1/products").hasRole(Role.SELLER.toString())
+                .antMatchers(HttpMethod.DELETE,"/api/v1/products/**").hasRole(Role.SELLER.toString())
                 .anyRequest()
                 .authenticated()
                 .and()

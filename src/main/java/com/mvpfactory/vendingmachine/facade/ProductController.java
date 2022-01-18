@@ -23,13 +23,13 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/{productName}")
+    @GetMapping("/name/{productName}")
     @ResponseStatus(HttpStatus.OK)
     public Product getProductByUsername(@PathVariable String productName) {
         return productService.findProduct(productName);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Product getProductById(@PathVariable UUID id) {
         return productService.findProduct(id);
