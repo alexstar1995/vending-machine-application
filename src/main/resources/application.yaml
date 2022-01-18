@@ -2,7 +2,7 @@ spring:
     application:
         name: vendingmachine
     datasource:
-        url: jdbc:postgresql://localhost:5432/vending_machine
+        url: jdbc:postgresql://vending_machine_db:5432/vending_machine
         driver-class-name: org.postgresql.Driver
         username: postgres
         password: postgres

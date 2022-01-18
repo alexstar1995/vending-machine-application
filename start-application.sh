@@ -1,5 +1,4 @@
 !#/bin/bash
 
 echo "Starting application"
-gradle clean test integrationTest build
-docker-compose up
+./gradlew clean build -x test -x integrationTest && docker-compose up

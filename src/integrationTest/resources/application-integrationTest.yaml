@@ -1,6 +1,6 @@
 spring:
     datasource:
-        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
         username: sa
         password: password
         driverClassName: org.h2.Driver
@@ -9,6 +9,6 @@ spring:
             ddl-auto: validate
         database-platform: org.hibernate.dialect.H2Dialect
     h2:
-        console-enabled: true
+        console-enabled: false
     liquibase:
         change-log: classpath:liquibase/db-changelog-root.yaml
